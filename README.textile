@@ -1,0 +1,31 @@
+h1. jTube-PHP
+
+A port of the jQuery plugin jTube developed by "monkeeCreate":http://monkeecreate.com into a PHP class.
+
+h2. Current Features
+
+* User uploads, playlists, subscriptions, contacts
+
+* Authenticated user uploads (public & private), playlists, subscriptions, contacts
+
+* Video search
+
+* Video feed (Top Rated, Most Viewed, ...)
+
+* Video playlist
+
+h2. Future Features
+
+* Video Uploads
+
+* Manage Videos
+
+h2. Requirements/Installing
+
+* PHP 5+
+
+* cURL
+
+h2. Developers
+
+John Hoover, "http://defvayne23.com":http://defvayne23.com
