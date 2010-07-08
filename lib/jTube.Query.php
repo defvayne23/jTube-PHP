@@ -10,18 +10,17 @@
  *
  * Version 1.0.0 - Last updated: June 10, 2010
 */
-class jTube
+
+require_once("jTube.php");
+
+class jTubeQuery extends jTube
 {
-	// Authentication
-	private $_devKey;
-	private $_authKey;
-	
-	// Video Queries
-	private $_queryType; //user, search, feed, playlist
+	// Queries
+	private $_queryType; // user, search, feed, playlist
 	private $_queryValue;
 	private $_queryOption; // uploads, playlists, subscriptions, contacts
 	
-	// Video Options
+	// Query Options
 	private $_format = "flash";
 	private $_order = "published";
 	private $_time = "all_time";
@@ -29,14 +28,6 @@ class jTube
 	private $_page = 1;
 	
 	private $_results;
-	
-	function setDev($sDevKey) {
-		$this->_devKey = $sDevKey;
-	}
-	
-	function setAuth($sAuthKey) {
-		$this->_authKey = $sAuthKey;
-	}
 	
 	function setQuery($sType, $sValue, $sTypeOption = "uploads") {
 		if(in_array($sType, array("user","search","feed","playlist"))) {
@@ -87,7 +78,7 @@ class jTube
 	}
 	
 	function runQuery() {
-		$sYoutubeUrl = 'http://gdata.youtube.com/feeds/';
+		$sYoutubeUrl = "http://gdata.youtube.com/feeds/";
 		
 		// Set desired query for returned results
 		switch($this->_queryType) {
@@ -130,13 +121,13 @@ class jTube
 			$aHeaders[] = "Authorization: AuthSub token=\"".$this->_authKey."\"";
 		
 		// Send query to YouTube
-		$curl_handle = curl_init();
-		curl_setopt($curl_handle, CURLOPT_URL, $sYoutubeUrl);
-		curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl_handle, CURLOPT_HTTPHEADER, $aHeaders);
-		$sResults = curl_exec($curl_handle);
-		$aInfo = curl_getinfo($curl_handle);
-		curl_close($curl_handle);
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $sYoutubeUrl);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $aHeaders);
+		$sResults = curl_exec($ch);
+		$aInfo = curl_getinfo($ch);
+		curl_close($ch);
 		
 		// Throw error
 		if($aInfo["http_code"] != 200) {
@@ -180,7 +171,7 @@ class jTube
 			);
 		}
 		
-		return $aPlaylist;
+		return $aPlaylists;
 	}
 	private function querySubscriptions($aData) {
 		$aSubscriptions = array();
@@ -213,7 +204,7 @@ class jTube
 	}
 	private function queryVideos($aData) {
 		$aVideos = array();
-							
+		
 		foreach($aData as $aVideo) {
 			//Create a clean category array
 			$aCategories = array();
@@ -222,7 +213,7 @@ class jTube
 					$aCategories[] = $aCategory["term"];
 				}
 			}
-		
+			
 			$aVideoInfo = array(
 				"title" => $aVideo["title"]["\$t"],
 				"link" => $aVideo["link"][0]["href"],
@@ -259,11 +250,11 @@ class jTube
 			}
 			
 			// Video published date/time
-			if($aVideo["published"])
+			if(isset($aVideo["published"]))
 				$aVideoInfo["published"] = strtotime($aVideo["published"]["\$t"]);
 			
 			// Video formated duration
-			if($aVideo["media\$group"]["yt\$duration"]) {
+			if(isset($aVideo["media\$group"]["yt\$duration"])) {
 				$duration = $aVideo["media\$group"]["yt\$duration"]["seconds"];
 				$hours = 0;
 				$minutes = 0;
@@ -297,7 +288,7 @@ class jTube
 			}
 			
 			// View count
-			if($aVideo["yt\$statistics"])
+			if(isset($aVideo["yt\$statistics"]))
 				$aVideoInfo["views"] = $aVideo["yt\$statistics"]["viewCount"];
 			
 			// Add video to array to pass back

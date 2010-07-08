@@ -20,7 +20,7 @@ h2. Future Features
 
 * Manage Videos
 
-h2. Requirements/Installing
+h2. Requirements
 
 * PHP 5+
 
