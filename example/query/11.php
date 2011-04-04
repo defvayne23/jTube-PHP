@@ -9,8 +9,8 @@ $oJTube->setOption("limit", 5);
 
 try {
 	$aContacts = $oJTube->runQuery();
-} catch(Exception $e) {
-	die($e->getMessage());
+} catch(Exception $sError) {
+	die($sError->getMessage());
 }
 ?>
 
@@ -48,8 +48,8 @@ $oJTube->setOption("limit", 5);
 
 try {
 	$aPlaylists = $oJTube->runQuery();
-} catch(Exception $e) {
-	die($e->getMessage());
+} catch(Exception $sError) {
+	die($sError->getMessage());
 }
 ?>
 

@@ -10,8 +10,8 @@ $oJTube->setOption("limit", 5);
 
 try {
 	$aVideos = $oJTube->runQuery();
-} catch(Exception $e) {
-	die($e->getMessage());
+} catch(Exception $sError) {
+	die($sError->getMessage());
 }
 ?>
 
@@ -26,7 +26,6 @@ include("../inc_header.php");
 	foreach($aVideos as $aVideo) {
 		echo "<li>\n";
 		echo "\t<a href=\"".$aVideo["link"]."\">\n";
-		echo "\t\t<img src=\"".$aVideo["thumbnail"]."\" width=\"120px\"><br>\n";
 		echo "\t\t".$aVideo["title"]."\n";
 		echo "\t</a>\n";
 		echo "</li>\n";
@@ -51,8 +50,8 @@ $oJTube->setOption("limit", 5);
 
 try {
 	$aVideos = $oJTube->runQuery();
-} catch(Exception $e) {
-	die($e->getMessage());
+} catch(Exception $sError) {
+	die($sError->getMessage());
 }
 ?>
 
@@ -61,7 +60,6 @@ try {
 	foreach($aVideos as $aVideo) {
 		echo "<li>\n";
 		echo "\t<a href=\"".$aVideo["link"]."\">\n";
-		echo "\t\t<img src=\"".$aVideo["thumbnail"]."\" width=\"120px\"><br>\n";
 		echo "\t\t".$aVideo["title"]."\n";
 		echo "\t</a>\n";
 		echo "</li>\n";

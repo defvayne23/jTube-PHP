@@ -4,8 +4,7 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setQuery("playlist", "D92C6F7092127B48");
-$oJTube->setOption("limit", 5);
+$oJTube->setQuery("videos", "ngXA6nXbp-8", "related");
 
 try {
 	$aVideos = $oJTube->runQuery();
@@ -15,11 +14,11 @@ try {
 ?>
 
 <?php
-$sTitle = "Playlist videos - Query";
+$sTitle = "Related videos";
 include("../inc_header.php");
 ?>
 
-<h2>Playlist videos - Query</h2>
+<h2>Related videos - Query</h2>
 <ul id="video-thumbs">
 	<?php
 	foreach($aVideos as $aVideo) {
@@ -44,11 +43,10 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setQuery("playlist", "D92C6F7092127B48");
-$oJTube->setOption("limit", 5);
+$oJTube->setQuery("videos", "ngXA6nXbp-8", "related");
 
 try {
-	$aVideos = $oJTube->runQuery();
+	$aVideo = $oJTube->runQuery();
 } catch(Exception $sError) {
 	die($sError->getMessage());
 }

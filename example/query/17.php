@@ -4,30 +4,28 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setQuery("playlist", "D92C6F7092127B48");
+$oJTube->setQuery("videos", "N0gb9v4LI4o", "comments");
 $oJTube->setOption("limit", 5);
 
 try {
-	$aVideos = $oJTube->runQuery();
+	$aComments = $oJTube->runQuery();
 } catch(Exception $sError) {
 	die($sError->getMessage());
 }
 ?>
 
 <?php
-$sTitle = "Playlist videos - Query";
+$sTitle = "Video comments";
 include("../inc_header.php");
 ?>
 
-<h2>Playlist videos - Query</h2>
-<ul id="video-thumbs">
+<h2>Video comments - Query</h2>
+<ul id="video-comments">
 	<?php
-	foreach($aVideos as $aVideo) {
+	foreach($aComments as $aComment) {
 		echo "<li>\n";
-		echo "\t<a href=\"".$aVideo["link"]."\">\n";
-		echo "\t\t<img src=\"".$aVideo["thumbnail"]."\" width=\"120px\"><br>\n";
-		echo "\t\t".$aVideo["title"]."\n";
-		echo "\t</a>\n";
+		echo "<b>".$aComment["author"]."</b> - ".date("m/d/Y", $aComment["posted"])."<br>\n";
+		echo $aComment["comment"]."<br><br>\n";
 		echo "</li>\n";
 	}
 	?>
@@ -44,24 +42,21 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setQuery("playlist", "D92C6F7092127B48");
-$oJTube->setOption("limit", 5);
+$oJTube->setQuery("videos", "N0gb9v4LI4o", "comments");
 
 try {
-	$aVideos = $oJTube->runQuery();
+	$aVideo = $oJTube->runQuery();
 } catch(Exception $sError) {
 	die($sError->getMessage());
 }
 ?>
 
-<ul id="video-thumbs">
+<ul id="video-comments">
 	<?php
-	foreach($aVideos as $aVideo) {
+	foreach($aComments as $aComment) {
 		echo "<li>\n";
-		echo "\t<a href=\"".$aVideo["link"]."\">\n";
-		echo "\t\t<img src=\"".$aVideo["thumbnail"]."\" width=\"120px\"><br>\n";
-		echo "\t\t".$aVideo["title"]."\n";
-		echo "\t</a>\n";
+		echo "<b>".$aComment["author"]."</b> - ".date("m/d/Y", $aComment["posted"])."<br>\n";
+		echo $aComment["comment"]."<br><br>\n";
 		echo "</li>\n";
 	}
 	?>
@@ -73,7 +68,7 @@ try {
 <section class="container">
 	<h3>Reponse:</h3>
 	<section class="code">
-		<pre><code><?php print_r($aVideos);?></code></pre>
+		<pre><code><?php print_r($aComments);?></code></pre>
 	</section>
 </section>
 

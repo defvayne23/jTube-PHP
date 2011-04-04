@@ -16,9 +16,9 @@ require_once("jTube.php");
 class jTubeQuery extends jTube
 {
 	// Queries
-	private $_queryType; // user, search, feed, playlist
+	private $_queryType; // user, search, feed, playlist, videos
 	private $_queryValue;
-	private $_queryOption; // uploads, playlists, subscriptions, contacts
+	private $_queryOption; // # user: profile, uploads, playlists, subscriptions, contacts ## videos: info, related, responses, comments ##
 	
 	// Query Options
 	private $_format = "flash";
@@ -26,11 +26,12 @@ class jTubeQuery extends jTube
 	private $_time = "all_time";
 	private $_limit = 5;
 	private $_page = 1;
+	private $_formated = true;
 	
 	private $_results;
 	
 	function setQuery($sType, $sValue, $sTypeOption = "uploads") {
-		if(in_array($sType, array("user","search","feed","playlist"))) {
+		if(in_array($sType, array("user","search","feed","playlist","videos"))) {
 			$this->_queryType = $sType;
 			$this->_queryValue = $sValue;
 			$this->_queryOption = $sTypeOption;
@@ -54,6 +55,8 @@ class jTubeQuery extends jTube
 				$this->_limit = $sValue;break;
 			case "page":
 				$this->_page = $sValue;break;
+			case "formated":
+				$this->_formated = $sValue;break;
 			default:
 				throw new Exception("Option passed is not a valid option.");
 		}
@@ -72,43 +75,62 @@ class jTubeQuery extends jTube
 				return $this->_limit;break;
 			case "page":
 				return $this->_page;break;
+			case "formated":
+				return $this->_formated;break;
 			default:
 				throw new Exception("Option passed is not a valid option.");
 		}
 	}
 	
 	function runQuery() {
-		$sYoutubeUrl = "http://gdata.youtube.com/feeds/";
+		$sYoutubeUrl = "http://gdata.youtube.com/feeds/api/";
 		
 		// Set desired query for returned results
 		switch($this->_queryType) {
 			case "user":
-				$sYoutubeUrl .= "api/users/".urlencode($this->_queryValue)."/".urlencode($this->_queryOption)."?";break;
+				if($this->_queryOption == "profile")
+					$sYoutubeUrl .= "users/".urlencode($this->_queryValue)."?";
+				else
+					$sYoutubeUrl .= "users/".urlencode($this->_queryValue)."/".urlencode($this->_queryOption)."?";
+				break;
 			case "search":
-				$sYoutubeUrl .= "api/videos?q=".urlencode($this->_queryValue)."&";break;
+				$sYoutubeUrl .= "videos?q=".urlencode($this->_queryValue)."&";break;
 			case "feed":
-				$sYoutubeUrl .= "api/standardfeeds/".urlencode($this->_queryValue)."?";break;
+				$sYoutubeUrl .= "standardfeeds/".urlencode($this->_queryValue)."?";break;
 			case "playlist":
-				$sYoutubeUrl .= "api/playlists/".urlencode($this->_queryValue)."?";break;
+				$sYoutubeUrl .= "playlists/".urlencode($this->_queryValue)."?";break;
+			case "videos":
+				if($this->_queryOption == "info")
+					$sYoutubeUrl .= "videos/".urlencode($this->_queryValue)."?";
+				else
+					$sYoutubeUrl .= "videos/".urlencode($this->_queryValue)."/".urlencode($this->_queryOption)."?";
+				break;
 			default:
 				throw new Exception("No query has been set.");
 		}
 		
 		// Set options
-		$sYoutubeUrl .= "alt=json";
-		$sYoutubeUrl .= "&max-results=".$this->_limit;
-		$sYoutubeUrl .= "&start-index=".((($this->_page * $this->_limit) - $this->_limit) + 1);
-		$sYoutubeUrl .= "&orderby=".urlencode($this->_order);
-		$sYoutubeUrl .= "&time=".urlencode($this->_time);
+		$sYoutubeUrl .= "alt=json&v=2";
 		
-		// Set desired format
-		switch($this->_format) {
-			case "mpeg":
-				$sYoutubeUrl .= "&format=6";break;
-			case "h263":
-				$sYoutubeUrl .= "&format=1";break;
-			default:
-				$sYoutubeUrl .= "&format=5";
+		if(($this->_queryType == "user" && $this->_queryOption == "profile")
+			|| ($this->_queryType == "videos" && $this->_queryOption == "info")
+		) {
+			// Avoid setting options
+		} else {
+			$sYoutubeUrl .= "&max-results=".$this->_limit;
+			$sYoutubeUrl .= "&start-index=".((($this->_page * $this->_limit) - $this->_limit) + 1);
+			$sYoutubeUrl .= "&orderby=".urlencode($this->_order);
+			$sYoutubeUrl .= "&time=".urlencode($this->_time);
+			
+			// Set desired format
+			switch($this->_format) {
+				case "mpeg":
+					$sYoutubeUrl .= "&format=6";break;
+				case "h263":
+					$sYoutubeUrl .= "&format=1";break;
+				default:
+					$sYoutubeUrl .= "&format=5";
+			}
 		}
 		
 		// Set Headers
@@ -121,40 +143,48 @@ class jTubeQuery extends jTube
 			$aHeaders[] = "Authorization: AuthSub token=\"".$this->_authKey."\"";
 		
 		// Send query to YouTube
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $sYoutubeUrl);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $aHeaders);
-		$sResults = curl_exec($ch);
-		$aInfo = curl_getinfo($ch);
-		curl_close($ch);
-		
-		// Throw error
-		if($aInfo["http_code"] != 200) {
-			throw new Exception("Error getting results.<br>".$sResults);
+		try {
+			$sResults = $this->request($sYoutubeUrl, $aHeaders);
+		} catch(Exception $sError) {
+			throw new Exception($sError);
 		}
 		
 		// Decode results
 		$this->_results = json_decode($sResults, true);
 		
 		// Parse results
-		switch($this->_queryType) {
-			case "search":
-			case "feed":
-			case "playlist":
-				return $this->queryVideos($this->_results["feed"]["entry"]);
-			break;
-			case "user":
-				if($this->_queryOption == "playlists") {
-					return $this->queryPlaylists($this->_results["feed"]["entry"]);
-				} elseif($this->_queryOption == "subscriptions") {
-					return $this->querySubscriptions($this->_results["feed"]["entry"]);
-				} elseif($this->_queryOption == "contacts") {
-					return $this->queryContacts($this->_results["feed"]["entry"]);
-				} else {
-					return $this->queryVideos($this->_results["feed"]["entry"]);
-				}
-			break;
+		if($this->_formated == true) {
+			switch($this->_queryType) {
+				case "search":
+				case "feed":
+				case "playlist":
+					return $this->queryVideos((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+				break;
+				case "user":
+					if($this->_queryOption == "playlists") {
+						return $this->queryPlaylists((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+					} elseif($this->_queryOption == "subscriptions") {
+						return $this->querySubscriptions((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+					} elseif($this->_queryOption == "contacts") {
+						return $this->queryContacts((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+					} elseif($this->_queryOption == "profile") {
+						return $this->queryProfile((isset($this->_results["entry"]))?$this->_results["entry"]:array());
+					} else {
+						return $this->queryVideos((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+					}
+				break;
+				case "videos":
+					if($this->_queryOption == "info") {
+						$aVideo = $this->queryVideos(array($this->_results["entry"]));
+						return $aVideo[0];
+					} elseif($this->_queryOption == "comments") {
+						return $this->queryComments((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+					} else {
+						return $this->queryVideos((isset($this->_results["feed"]["entry"]))?$this->_results["feed"]["entry"]:array());
+					}
+			}
+		} else {
+			return $this->_results;
 		}
 	}
 	
@@ -164,7 +194,7 @@ class jTubeQuery extends jTube
 		foreach($aData as $aPlaylist) {			
 			$aPlaylists[] = array(
 				"title" => $aPlaylist["title"]["\$t"],
-				"description" => $aPlaylist["yt\$description"]["\$t"],
+				"description" => $aPlaylist["summary"]["\$t"],
 				"id" => $aPlaylist["yt\$playlistId"]["\$t"],
 				"link" => $aPlaylist["link"][1]["href"],
 				"published" => strtotime($aPlaylist["published"]["\$t"])
@@ -181,7 +211,6 @@ class jTubeQuery extends jTube
 				"title" => $aSubscription["title"]["\$t"],
 				"username" => $aSubscription["yt\$username"]["\$t"],
 				"link" => $aSubscription["link"][1]["href"],
-				"thumbnail" => $aSubscription["media\$thumbnail"]["url"],
 				"published" => strtotime($aSubscription["published"]["\$t"]),
 				"updated" => strtotime($aSubscription["updated"]["\$t"])
 			);
@@ -202,35 +231,73 @@ class jTubeQuery extends jTube
 		
 		return $aContacts;
 	}
+	private function queryProfile($aData) {
+		$aProfile = array(
+			"username" => $aData["yt\$username"]["\$t"],
+			"thumbnail" => $aData["media\$thumbnail"]["url"],
+			"views" => $aData["yt\$statistics"]["viewCount"],
+			"uploadViews" => $aData["yt\$statistics"]["videoWatchCount"],
+			"subscribers" => $aData["yt\$statistics"]["subscriberCount"],
+			"lastLogin" => strtotime($aData["yt\$statistics"]["lastWebAccess"]),
+			"location" => $aData["yt\$location"]["\$t"],
+			"gender" => $aData["yt\$gender"]["\$t"],
+			"age" => $aData["yt\$age"]["\$t"],
+			"link" => $aData["link"][1]["href"],
+			"title" => $aData["title"]["\$t"]
+		);
+		
+		return $aProfile;
+	}
+	private function queryComments($aData) {
+		$aComments = array();
+		
+		foreach($aData as $aComment) {
+			$aComments[] = array(
+				"author" => $aComment["author"][0]["name"]["\$t"],
+				"comment" => $aComment["content"]["\$t"],
+				"title" => $aComment["title"]["\$t"],
+				"posted" => strtotime($aComment["published"]["\$t"]),
+				"updated" => strtotime($aComment["updated"]["\$t"])
+			);
+		}
+		
+		return $aComments;
+	}
 	private function queryVideos($aData) {
 		$aVideos = array();
 		
 		foreach($aData as $aVideo) {
-			//Create a clean category array
-			$aCategories = array();
-			foreach($aVideo["category"] as $index => $aCategory) {
-				if($index != 0) {
-					$aCategories[] = $aCategory["term"];
-				}
-			}
-			
 			$aVideoInfo = array(
 				"title" => $aVideo["title"]["\$t"],
 				"link" => $aVideo["link"][0]["href"],
-				"categories" => $aCategories,
 				"author" => array(
 					"name" => $aVideo["author"][0]["name"]["\$t"],
 					"link" => $aVideo["author"][0]["uri"]["\$t"]
 				)
 			);
 			
+			// Category label
+			if(isset($aVideo["media\$group"]["media\$category"])) {
+				$aVideoInfo["category"] = $aVideo["media\$group"]["media\$category"][0]["label"];
+			}
+			
+			// Keywords
+			if(isset($aVideo["media\$group"]["media\$keywords"])) {
+				$aVideoInfo["category"] = $aVideo["media\$group"]["media\$keywords"]["\$t"];
+			}
+			
+			// Video ID
+			if(isset($aVideo["media\$group"]["yt\$videoid"])) {
+				$aVideoInfo["id"] = $aVideo["media\$group"]["yt\$videoid"]["\$t"];
+			}
+			
 			// Description
-			if($aVideo["media\$group"]["media\$description"]) {
+			if(isset($aVideo["media\$group"]["media\$description"])) {
 				$aVideoInfo["description"] = $aVideo["media\$group"]["media\$description"]["\$t"];
 			}
-				
+			
 			// Video Thumbnail
-			if($aVideo["media\$group"]["media\$thumbnail"]) {
+			if(isset($aVideo["media\$group"]["media\$thumbnail"])) {
 				$aVideoInfo["thumbnail"] = $aVideo["media\$group"]["media\$thumbnail"][3]["url"];
 			}
 			
@@ -239,7 +306,7 @@ class jTubeQuery extends jTube
 			foreach($aVideo["media\$group"]["media\$content"] as $aFormat) {
 				$aVideoFormats[$aFormat["yt\$format"]] = $aFormat["url"];
 			}
-			
+		
 			// Get video url based on requested video type
 			if($this->_format == "mpeg") {
 				$aVideoInfo["video"] = $aVideoFormats[6];
@@ -259,29 +326,29 @@ class jTubeQuery extends jTube
 				$hours = 0;
 				$minutes = 0;
 				$seconds = 0;
-			
+				
 				// Hours
 				while($duration >= 3600) {
 					$hours = $hours + 1;
 					$duration = $duration - 3600;
 				}
-			
+				
 				// Minutes
 				while($duration >= 60) {
 					$minutes = $minutes + 1;
 					$duration = $duration - 60;
 				}
-			
+				
 				// Seconds is remainder
 				$seconds = $duration;
-			
+				
 				// Add leading 0
 				if($seconds < 10)
 					$seconds = "0".$seconds;
-			
+				
 				// Put minutes and seconds together
 				$aVideoInfo["length"] = $minutes.":".$seconds;
-			
+				
 				// If video is an hour or more, add to video length
 				if($hours > 0)
 					$aVideoInfo["length"] = $hours.":".$aVideoInfo["length"];

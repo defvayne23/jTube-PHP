@@ -4,32 +4,29 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setAuth($sAuthKey);
-$oJTube->setQuery("user", "default", "playlists");
-$oJTube->setOption("limit", 5);
+$oJTube->setQuery("videos", "ngXA6nXbp-8", "info");
 
 try {
-	$aPlaylists = $oJTube->runQuery();
+	$aVideo = $oJTube->runQuery();
 } catch(Exception $sError) {
 	die($sError->getMessage());
 }
 ?>
 
 <?php
-$sTitle = "Authenticated user playlists - Query";
+$sTitle = "Video info";
 include("../inc_header.php");
 ?>
 
-<h2>Authenticated user playlists - Query</h2>
+<h2>Video info - Query</h2>
 <ul id="video-thumbs">
 	<?php
-	foreach($aPlaylists as $aPlaylist) {
-		echo "<li>\n";
-		echo "\t<a href=\"".$aPlaylist["link"]."\">\n";
-		echo "\t\t".$aPlaylist["title"]."\n";
-		echo "\t</a>\n";
-		echo "</li>\n";
-	}
+	echo "<li>\n";
+	echo "\t<a href=\"".$aVideo["link"]."\">\n";
+	echo "\t\t<img src=\"".$aVideo["thumbnail"]."\" width=\"120px\"><br>\n";
+	echo "\t\t".$aVideo["title"]."\n";
+	echo "\t</a>\n";
+	echo "</li>\n";
 	?>
 </ul>
 <div class="clear">&nbsp;</div>
@@ -44,12 +41,10 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setAuth($sAuthKey);
-$oJTube->setQuery("user", "default", "playlists");
-$oJTube->setOption("limit", 5);
+$oJTube->setQuery("videos", "ngXA6nXbp-8", "info");
 
 try {
-	$aPlaylists = $oJTube->runQuery();
+	$aVideo = $oJTube->runQuery();
 } catch(Exception $sError) {
 	die($sError->getMessage());
 }
@@ -57,13 +52,12 @@ try {
 
 <ul id="video-thumbs">
 	<?php
-	foreach($aPlaylists as $aPlaylist) {
-		echo "<li>\n";
-		echo "\t<a href=\"".$aPlaylist["link"]."\">\n";
-		echo "\t\t".$aPlaylist["title"]."\n";
-		echo "\t</a>\n";
-		echo "</li>\n";
-	}
+	echo "<li>\n";
+	echo "\t<a href=\"".$aVideo["link"]."\">\n";
+	echo "\t\t<img src=\"".$aVideo["thumbnail"]."\" width=\"120px\"><br>\n";
+	echo "\t\t".$aVideo["title"]."\n";
+	echo "\t</a>\n";
+	echo "</li>\n";
 	?>
 </ul>');
 		?></code></pre>
@@ -73,7 +67,7 @@ try {
 <section class="container">
 	<h3>Reponse:</h3>
 	<section class="code">
-		<pre><code><?php print_r($aPlaylists);?></code></pre>
+		<pre><code><?php print_r($aVideo);?></code></pre>
 	</section>
 </section>
 

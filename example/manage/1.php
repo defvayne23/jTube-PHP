@@ -1,25 +1,33 @@
 <?php
-include("../../lib/jTube.Query.php");
+include("../../lib/jTube.ManageVideo.php");
 include("../../config.php");
 
-$oJTube = new jTubeQuery;
+$oJTube = new jTubeManageVideo;
 $oJTube->setDev($sDevKey);
-$oJTube->setQuery("playlist", "D92C6F7092127B48");
-$oJTube->setOption("limit", 5);
+$oJTube->setAuth($sAuthKey);
 
 try {
-	$aVideos = $oJTube->runQuery();
+	$oJTube->loadVideo("S4pGCqtkJEE");
 } catch(Exception $sError) {
 	die($sError->getMessage());
 }
+
+$oJTube->setInfo("title", "Updated Title");
+
+try {
+	$oJTube->save();
+} catch(Exception $sError) {
+	die($sError->getMessage());
+}
+die;
 ?>
 
 <?php
-$sTitle = "Playlist videos - Query";
+$sTitle = "Authenticated user videos - Query";
 include("../inc_header.php");
 ?>
 
-<h2>Playlist videos - Query</h2>
+<h2>Authenticated user videos - Query</h2>
 <ul id="video-thumbs">
 	<?php
 	foreach($aVideos as $aVideo) {
@@ -44,7 +52,8 @@ include("../../config.php");
 
 $oJTube = new jTubeQuery;
 $oJTube->setDev($sDevKey);
-$oJTube->setQuery("playlist", "D92C6F7092127B48");
+$oJTube->setAuth($sAuthKey);
+$oJTube->setQuery("user", "default", "uploads");
 $oJTube->setOption("limit", 5);
 
 try {
